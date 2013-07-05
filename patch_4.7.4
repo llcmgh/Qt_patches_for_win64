@@ -1,0 +1,122 @@
+--- 4.7.4src/src/3rdparty/clucene/src/CLucene/config/define_std.h	Mon Jun 17 19:38:30 2013
++++ 4.7.4/src/3rdparty/clucene/src/CLucene/config/define_std.h	Fri Jun 21 16:45:47 2013
+@@ -27,8 +27,8 @@
+ #define _CL_HAVE_FUNCTIONAL
+ #define _CL_HAVE_MATH_H
+ #define _CL_HAVE_STL
+-#define _CL_HAVE_HASH_MAP
+-#define _CL_HAVE_HASH_SET
++//#define _CL_HAVE_HASH_MAP		 
++//#define _CL_HAVE_HASH_SET      
+ #define _CL_HAVE_MAP
+ #define _CL_HAVE_SET
+ #define _CL_HAVE_LIST
+--- 4.7.4src/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Structure.cpp	Mon Jun 17 19:37:28 2013
++++ 4.7.4/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Structure.cpp	Fri Jun 21 16:00:16 2013
+@@ -157,7 +157,8 @@
+ {
+     if (m_previous) {
+         if (m_nameInPrevious)
+-            m_previous->table.remove(make_pair(RefPtr<UString::Rep>(m_nameInPrevious.get()), m_attributesInPrevious), m_specificValueInPrevious);
++ //           m_previous->table.remove(make_pair(RefPtr<UString::Rep>(m_nameInPrevious.get()), m_attributesInPrevious), m_specificValueInPrevious);
++			 m_previous->table.remove(StructureTransitionTableHash::Key(RefPtr<UString::Rep>(m_nameInPrevious.get()), m_attributesInPrevious), m_specificValueInPrevious);  
+         else
+             m_previous->table.removeAnonymousSlotTransition(m_anonymousSlotsInPrevious);
+ 
+--- 4.7.4src/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Structure.h	Mon Jun 17 19:37:28 2013
++++ 4.7.4/src/3rdparty/javascriptcore/JavaScriptCore/runtime/Structure.h	Fri Jun 21 16:01:22 2013
+@@ -317,7 +317,8 @@
+         TransitionTable* transitionTable = new TransitionTable;
+         setTransitionTable(transitionTable);
+         if (existingTransition)
+-            add(std::make_pair(RefPtr<UString::Rep>(existingTransition->m_nameInPrevious.get()), existingTransition->m_attributesInPrevious), existingTransition, existingTransition->m_specificValueInPrevious);
++//            add(std::make_pair(RefPtr<UString::Rep>(existingTransition->m_nameInPrevious.get()), existingTransition->m_attributesInPrevious), existingTransition, existingTransition->m_specificValueInPrevious);
++			  add(StructureTransitionTableHash::Key(RefPtr<UString::Rep>(existingTransition->m_nameInPrevious.get()), existingTransition->m_attributesInPrevious),existingTransition, existingTransition->m_specificValueInPrevious); //Lichen
+     }
+ } // namespace JSC
+ 
+--- 4.7.4src/src/3rdparty/javascriptcore/JavaScriptCore/wtf/HashMap.h	Mon Jun 17 19:37:18 2013
++++ 4.7.4/src/3rdparty/javascriptcore/JavaScriptCore/wtf/HashMap.h	Fri Jun 21 15:39:17 2013
+@@ -237,7 +237,8 @@
+         typedef HashMapTranslator<ValueType, ValueTraits, HashFunctions> TranslatorType;
+         pair<typename HashTableType::iterator, bool> p = m_impl.template add<KeyType, MappedType, TranslatorType>(key, mapped);
+ 	typename HashMap<T, U, V, W, X>::iterator temp = p.first;
+-        return make_pair<typename HashMap<T, U, V, W, X>::iterator, bool>(temp, p.second);
++//        return make_pair<typename HashMap<T, U, V, W, X>::iterator, bool>(temp, p.second);
++		return make_pair(temp, p.second);    
+ //      return m_impl.template add<KeyType, MappedType, TranslatorType>(key, mapped);
+     }
+ 
+--- 4.7.4src/src/3rdparty/javascriptcore/JavaScriptCore/wtf/HashSet.h	Mon Jun 17 19:37:18 2013
++++ 4.7.4/src/3rdparty/javascriptcore/JavaScriptCore/wtf/HashSet.h	Fri Jun 21 16:03:02 2013
+@@ -209,7 +209,8 @@
+     {
+         pair<typename HashTable<T, T, IdentityExtractor<T>, U, V, V>::iterator, bool> p = m_impl.add(value);
+         typename HashSet<T, U, V>::iterator temp = p.first;
+-        pair<typename HashSet<T, U, V>::iterator, bool> p2 = make_pair<typename HashSet<T, U, V>::iterator, bool>(temp, p.second);
++ //       pair<typename HashSet<T, U, V>::iterator, bool> p2 = make_pair<typename HashSet<T, U, V>::iterator, bool>(temp, p.second);
++		pair<typename HashSet<T, U, V>::iterator, bool> p2 = make_pair(temp, p.second);   
+  //       p2.first = p.first;
+  //       p2.second = p.second;
+         return p2;
+@@ -222,7 +223,8 @@
+     {
+         typedef HashSetTranslatorAdapter<ValueType, ValueTraits, T, HashTranslator> Adapter;
+         pair<typename HashTableType::iterator, bool> p = m_impl.template addPassingHashCode<T, T, Adapter>(value, value);
+-	return make_pair<iterator, bool>(p.first, p.second);
++//	return make_pair<iterator, bool>(p.first, p.second);
++		return make_pair(p.first, p.second);   
+     }
+ 
+     template<typename T, typename U, typename V>
+--- 4.7.4src/src/3rdparty/javascriptcore/JavaScriptCore/wtf/RefPtrHashMap.h	Mon Jun 17 19:37:19 2013
++++ 4.7.4/src/3rdparty/javascriptcore/JavaScriptCore/wtf/RefPtrHashMap.h	Fri Jun 21 15:37:55 2013
+@@ -212,9 +212,9 @@
+         typedef HashMapTranslator<ValueType, ValueTraits, HashFunctions> TranslatorType;
+         pair<typename HashTableType::iterator, bool> p = m_impl.template add<KeyType, MappedType, TranslatorType>(key, mapped);
+ //        typename RefPtrHashMap<T, U, V, W, X>::iterator temp = p.first;
+-        return make_pair<typename RefPtrHashMap<T, U, V, W, X>::iterator, bool>(
+-            typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);
+-
++//        return make_pair<typename RefPtrHashMap<T, U, V, W, X>::iterator, bool>(
++//           typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);
++        return make_pair(typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);   
+ //        return m_impl.template add<KeyType, MappedType, TranslatorType>(key, mapped);
+     }
+ 
+@@ -223,9 +223,9 @@
+     RefPtrHashMap<T, U, V, W, X>::inlineAdd(RawKeyType key, const MappedType& mapped) 
+     {
+         pair<typename HashTableType::iterator, bool> p = m_impl.template add<RawKeyType, MappedType, RawKeyTranslator>(key, mapped);
+-        return make_pair<typename RefPtrHashMap<T, U, V, W, X>::iterator, bool>(
+-            typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);
+-
++ //       return make_pair<typename RefPtrHashMap<T, U, V, W, X>::iterator, bool>(
++ //           typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);
++		  return make_pair(typename RefPtrHashMap<T, U, V, W, X>::iterator(p.first), p.second);  
+  //       return m_impl.template add<RawKeyType, MappedType, RawKeyTranslator>(key, mapped);
+     }
+ 
+--- 4.7.4src/src/3rdparty/webkit/JavaScriptCore/runtime/Structure.cpp	Mon Jun 17 19:37:05 2013
++++ 4.7.4/src/3rdparty/webkit/JavaScriptCore/runtime/Structure.cpp	Fri Jun 21 16:12:00 2013
+@@ -163,7 +163,8 @@
+         TransitionTable* transitionTable = new TransitionTable;
+         setTransitionTable(transitionTable);
+         if (existingTransition)
+-            transitionTableAdd(std::make_pair(existingTransition->m_nameInPrevious.get(), existingTransition->m_attributesInPrevious), existingTransition, existingTransition->m_specificValueInPrevious);
++//            transitionTableAdd(std::make_pair(existingTransition->m_nameInPrevious.get(), existingTransition->m_attributesInPrevious), existingTransition, existingTransition->m_specificValueInPrevious);
++			transitionTableAdd(StructureTransitionTableHash::Key(existingTransition->m_nameInPrevious.get(), existingTransition->m_attributesInPrevious), existingTransition, existingTransition->m_specificValueInPrevious); 
+     }
+     if (!specificValue) {
+         TransitionTable::iterator find = transitionTable()->find(key);
+@@ -262,8 +263,8 @@
+ {
+     if (m_previous) {
+         ASSERT(m_nameInPrevious);
+-        m_previous->transitionTableRemove(make_pair(m_nameInPrevious.get(), m_attributesInPrevious), m_specificValueInPrevious);
+-
++//        m_previous->transitionTableRemove(make_pair(m_nameInPrevious.get(), m_attributesInPrevious), m_specificValueInPrevious);
++		 m_previous->transitionTableRemove(StructureTransitionTableHash::Key(m_nameInPrevious.get(), m_attributesInPrevious), m_specificValueInPrevious);  
+     }
+     ASSERT(!m_enumerationCache.hasDeadObject());
+ 

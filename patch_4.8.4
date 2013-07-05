@@ -1,0 +1,28 @@
+--- 4.8.4src/src/3rdparty/webkit/Source/JavaScriptCore/wtf/HashSet.h	Fri Nov 23 05:10:05 2012
++++ 4.8.4/src/3rdparty/webkit/Source/JavaScriptCore/wtf/HashSet.h	Fri Jul  5 12:38:50 2013
+@@ -177,7 +177,9 @@
+     template<typename T, typename U, typename V>
+     inline pair<typename HashSet<T, U, V>::iterator, bool> HashSet<T, U, V>::add(const ValueType& value)
+     {
+-        return m_impl.add(value);
++//        return m_impl.add(value);
++		auto p= m_impl.add(value);
++		return make_pair(typename HashSet<T,U,V>::const_iterator(p.first), p.second);
+     }
+ 
+     template<typename Value, typename HashFunctions, typename Traits>
+@@ -185,8 +187,12 @@
+     inline pair<typename HashSet<Value, HashFunctions, Traits>::iterator, bool>
+     HashSet<Value, HashFunctions, Traits>::add(const T& value)
+     {
+-        typedef HashSetTranslatorAdapter<ValueType, ValueTraits, T, HashTranslator> Adapter;
+-        return m_impl.template addPassingHashCode<T, T, Adapter>(value, value);
++//        typedef HashSetTranslatorAdapter<ValueType, ValueTraits, T, HashTranslator> Adapter;
++//        return m_impl.template addPassingHashCode<T, T, Adapter>(value, value);
++		typedef HashSetTranslatorAdapter<ValueType, ValueTraits, T, HashTranslator> Adapter;
++		typedef typename HashSet<Value, HashFunctions, Traits>::iterator iter_type;
++		auto& temp = m_impl.template addPassingHashCode<T, T, Adapter>(value, value);
++		return make_pair((iter_type)temp.first, temp.second);
+     }
+ 
+     template<typename T, typename U, typename V>
